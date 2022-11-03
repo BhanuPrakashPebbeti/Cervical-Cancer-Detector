@@ -199,3 +199,39 @@ def cut_image(model,imagecv,input_size_obj=512,stride_obj = 2):
         if ymax>h:
             ymax = h
     return imagecv[ymin:ymax,xmin:xmax]
+
+def cut_image_lite(output,imagecv,input_size_obj=512,stride_obj = 2):
+    output_size_obj = input_size_obj//stride_obj
+    h,w = imagecv.shape[0],imagecv.shape[1]
+    hm = output[:,:,:,0].reshape((1,output_size_obj,output_size_obj,1))
+    reg = output[:,:,:,1:3]
+    wh = output[:,:,:,3:]
+    
+    
+    scores,detections = _ctdet_decode(hm, reg, wh, k=1, output_size_obj=output_size_obj, output_stride=2)
+    for i in range(len(detections)):
+        detection = detections[i]
+        xmin = detection[0]*(w/output_size_obj)
+        xmin = xmin - (xmin//6)
+        xmin = int(int(xmin>0)*xmin)
+        if xmin>w:
+            xmin = w
+        ymin = detection[1]*(h/output_size_obj)
+        ymin = ymin-(ymin//6)
+        ymin = int(ymin*int(ymin>0))
+        if ymin>h:
+            ymin = h
+        xmax = detection[2]*(w/output_size_obj)
+        xmax = xmax+(xmax//6)
+        xmax = int(xmax*int(xmax>0))
+        if xmax>w:
+            xmax = w
+        ymax = detection[3]*(h/output_size_obj)
+        ymax = ymax + (ymax//6)
+        ymax = int(ymax*int(ymax>0))
+        if ymax>h:
+            ymax = h
+    return imagecv[ymin:ymax,xmin:xmax]
+
+
+
