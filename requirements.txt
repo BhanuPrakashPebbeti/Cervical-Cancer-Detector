@@ -1,0 +1,2 @@
+efficientnet
+tflite-runtime

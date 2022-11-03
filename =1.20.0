@@ -1,0 +1,2 @@
+Looking in indexes: https://pypi.org/simple, https://www.piwheels.org/simple
+Requirement already satisfied: numpy in ./cervix/lib/python3.7/site-packages (1.19.5)
