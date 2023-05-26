@@ -91,7 +91,7 @@ button2 = Button('ROI',200,40,(530,250),5,button_font)
 button3 = Button('Prediction',200,40,(530,350),5,button_font)
 button4 = Button('Back',200,40,(530,450),5,button_font)
 
-classifier = classification_module("models/model.tflite")
+classifier = classification_module("models/modelB0.tflite")
 
 input_size = (512,512)
 run = True
@@ -102,12 +102,20 @@ predict = False
 back = False
 done_prediction = False
 
+preroi = []
+preclass = []
+roicutting = []
+classification = []
+
 while run:
     for e in pygame.event.get():
         if e.type == pygame.QUIT:
+            print("ROI Preprocessing : ", np.mean(preroi), np.std(preroi, ddof=1))
+            print("ROI Cutting : ", np.mean(roicutting), np.std(roicutting, ddof=1))
+            print("Classification Preprocessing : ", np.mean(preclass), np.std(preclass, ddof=1))
+            print("Classification : ", np.mean(classification), np.std(classification, ddof=1))
             run = False
             pygame.quit()
-            quit()
             break
     capture = button1.draw(capture)
     roi_image = button2.draw(roi_image)
@@ -125,17 +133,24 @@ while run:
             text = STAT_FONT.render("This Might take some time!",2,(255,255,255))
             screen.blit(text,(100,475))
             pygame.display.update()
+            roi_pre_start = time.time()
+            rgbframe_input_preprocessed = classifier.preprocess(rgbframe_input)
             roi_start = time.time()
-            roi_cut = classifier.apply_roi_cutting(rgbframe_input)
+            roi_cut = classifier.apply_roi_cutting(rgbframe_input_preprocessed,rgbframe_input)
             roi_end = time.time()
             image = classifier.preprocess(roi_cut)
             pre_end = time.time()
             label,score = classifier.classify(image)
             class_end = time.time()
             print("Done")
-            print(roi_end-roi_start)
-            print(pre_end-roi_end)
-            print(class_end-pre_end)
+            print("ROI Preprocessing :",roi_start-roi_pre_start)
+            preroi.append(roi_start-roi_pre_start)
+            print("ROI Cutting :",roi_end-roi_start)
+            roicutting.append(roi_end-roi_start)
+            print("Classification Preprocessing :",pre_end-roi_end)
+            preclass.append(pre_end-roi_end)
+            print("Classification :",class_end-pre_end)
+            classification.append(class_end-pre_end)
             done_prediction = True
             
     if roi_image:
@@ -169,3 +184,4 @@ while run:
     pygame.display.update()
     clock.tick(120)
     
+
